@@ -1,0 +1,24 @@
+name: test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-1:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Add libs
+      run: sudo apt-get install -y libi2c-dev
+    - name: make rtc-ds3231
+      run: make all
+      working-directory: ./src/rtc-ds3231
+    # - name: make 7seg-tm1640
+    # Excluding code that uses wiringpi.
+    # The lib sources are deprecated by
+    # the author. Sad news for OpenSource:
+    # http://wiringpi.com/news/
+    # Thank you Gordon for all the work.
