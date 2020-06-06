@@ -11,7 +11,7 @@ The hardware repository is located at https://github.com/fm4dd/picon-one-hw.
 
 ### DS3231 Realtime Clock (I2C 0x68)
 
-- Setup log [setup1_rtc_ds3231.md](./setup1_rtc_ds3231.md)
+- Setup log [setup1-rtc-ds3231.md](./setup1-rtc-ds3231.md)
 - Test Code: src/rtc-ds3231/test-ds3231.c
 ```
 pi@rpi0w:~ $ cd picon-one-sw/src/rtc-ds3231/
@@ -82,6 +82,27 @@ Usage:
   tm1640-ctl clear      : Clear display.
   tm1640-ctl write <num>: Write digits to display, up to 8 digits.
 ```
+
+### 3.5" TFT display Adafruit 2050
+
+- Setup log [setup2-tft-hx8357d.md](./setup2-tft-hx8357d.md)
+- Test Code: src/tft-hx8357d
+
+The test programs require libjpeg:
+```
+pi@rpi0w:~/picon-one-sw/src/tft-hx8357d $ sudo apt-get install libjpeg-dev
+...
+Need to get 236 kB of archives.
+After this operation, 543 kB of additional disk space will be used.
+```
+
+1. tft-stopwatch
+
+This program implements a simple stopwatch on the TFT screen. It is controlled by three push-buttons: "Mode" starts or restarts the clock, "Enter" stops the clock, and "Up" resets the clock to zero.
+
+2. tft-tempgraph
+
+This program measures the CPU temperature in 500ms intervals, and creates a history graph over the past 6 minutes. This is useful to see CPU load impact on heat generation.
 
 ## License
 
