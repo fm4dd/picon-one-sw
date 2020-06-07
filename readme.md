@@ -104,6 +104,38 @@ This program implements a simple stopwatch on the TFT screen. It is controlled b
 
 This program measures the CPU temperature in 500ms intervals, and creates a history graph over the past 6 minutes. This is useful to see CPU load impact on heat generation.
 
+### SC16IS572 dual-UART (I2C 0x48)
+
+- Setup
+```
+pi@rpi0w:~ $ sudo vi /boot/config.txt
+dtoverlay=sc16is752-i2c,int_pin=24,addr=0x48
+```
+- Test Code: src/uart-sc16is752
+```
+pi@rpi0w:~/picon-one-sw/src/uart-sc16is752 $ make
+gcc -O1 -Wall -g   -c -o uart-send.o uart-send.c
+gcc -O1 -Wall -g   -c -o serial.o serial.c
+gcc -O1 -Wall -g -o uart-send uart-send.o serial.o
+gcc -O1 -Wall -g   -c -o uart-receive.o uart-receive.c
+gcc -O1 -Wall -g -o uart-receive uart-receive.o serial.o
+```
+
+Cross-connect pinheader contacts on J2: RX1 --> TX2, and TX1 --> RX2
+
+Open two terminals. Terminal-1:
+```
+pi@rpi0w:~/picon-one-sw/src/uart-sc16is752 $ ./uart-receive
+/dev/ttySC1 [115200] receive: !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRS
+TUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+```
+Terminal-2:
+```
+pi@rpi0w:~/picon-one-sw/src/uart-sc16is752 $ ./uart-send
+/dev/ttySC0 [115200] send: !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUV
+WXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}
+```
+
 ## License
 
 MIT License

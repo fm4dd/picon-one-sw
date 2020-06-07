@@ -5,6 +5,7 @@
  * requires:    TFT as framebuffer /dev/fb0, openvg lib from    *
  *              https://github.com/ajstarks/openvg              *
  *              WiringPI lib for pushbutton start/stop control  *
+ *              libjpeg, e.g. sudo apt-get install libjpeg-dev  *
  * author:      05/23/2020 Frank4DD                             *
  * ------------------------------------------------------------ */
 #include <stdio.h>

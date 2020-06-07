@@ -5,6 +5,7 @@
  * return:      0 on success, and -1 on errors.                 *
  * requires:    TFT as framebuffer /dev/fb0, openvg lib from    *
  *              https://github.com/ajstarks/openvg              *
+ *              libjpeg, e.g. sudo apt-get install libjpeg-dev  *
  * author:      03/10/2020 Frank4DD                             *
  * ------------------------------------------------------------ */
 #include <stdio.h>
