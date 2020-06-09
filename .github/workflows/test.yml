@@ -12,12 +12,23 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Add libs
-      run: sudo apt-get install -y libi2c-dev
+      run: sudo apt-get install -y libi2c-dev libcurl4-openssl-dev
     - name: make rtc-ds3231
       run: make all
       working-directory: ./src/rtc-ds3231
+    - name: make uart-sc16is752
+      run: make all
+      working-directory: ./src/uart-sc16is752
+    #- name: make tft-hx8357d
+    #  run: make all
+    #  working-directory: ./src/tft-hx8357d
+    # >The OpenVG libs would not be avail.
+    - name: make jpl-horizon
+      run:  make jplh-client
+      working-directory: ./src/jpl-horizon
+    # others e.g. jplh-display my need libs
     # - name: make 7seg-tm1640
-    # Excluding code that uses wiringpi.
+    # >Excluding code that uses wiringpi.
     # The lib sources are deprecated by
     # the author. Sad news for OpenSource:
     # http://wiringpi.com/news/
