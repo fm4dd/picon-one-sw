@@ -14,17 +14,7 @@
  *                                                              *
  * This program gets the sun position for given coords and time *
  * The results are written into a ./data-tracker folder:        *
- * dset.txt -> dataset information file                         *
- * yyyymmdd.csv -> sun position daily file(s) in readable csv   *
- * yyyymmdd.bin -> sun position daily file(s) in binary format  *
- * srs-yyyy.csv -> sunrise/sunset yearly file in readable csv   *
- * srs-yyyy.bin -> sunrise/sunset yearly file in binary format  *
- * file format description: see fileformat.md                   *
- * data volume: i=60   (1min) day=112K, month=2MB, year=23MB    *
- * data volume: i=600 (10min) day=24K, month=300K, year=3.0MB   *
- *                                                              *
- * Remember the bin file formats need to match the MCU code for *
- * successful extract of the file structures at the MCU program *
+ * "./tracker-data/jplh-data.csv"                               *
  *                                                              *
  * data volues: 82.5kB/day, 2.3MB/mo                            *
  * JPL Horizons system has a 90024 line max., 62.5 days at 1 m  *
@@ -50,6 +40,7 @@
 #define FIXPAR1   "horizons_batch.cgi?batch=1&MAKE_EPHEM='YES'&TABLE_TYPE='OBSERVER'"
 #define FIXPAR2   "&COMMAND='10'&CENTER='coord@399'&COORD_TYPE='GEODETIC'"
 #define FIXPAR3   "&QUANTITIES='4'&OBJ_DATA='NO'&CSV_FORMAT='YES'&APPARENT='REFRACTED'"
+#define OUTFILE   "./tracker-data/jplh-data.csv"
 
 int verbose = 0;
 char progver[] = "1.0";              // program version
@@ -365,7 +356,7 @@ int main(int argc, char *argv[]) {
     * -------------------------------------------------------- */
    char jplh_query[3096];
    char query_buf[2048];
-   static const char *pagefilename = "./tracker-data/jplh-data.csv";
+   static const char *pagefilename = OUTFILE; // currently hardcoded - TODO
    FILE *pagefile;
 
    /* -------------------------------------------------------- *
