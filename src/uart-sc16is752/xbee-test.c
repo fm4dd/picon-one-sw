@@ -27,13 +27,14 @@
  * ------------------------------------------------------------ */
 int verbose  = 0;              // 0 = off, 1 = on
 char *port   = "/dev/ttySC1";  // serial port device
-int speed    = 115200;       // XBee modified speed
-//int speed    = 9600;           // XBee default speed
+int speed    = 115200;         // XBee modified speed
+//int speed    = 9600;         // XBee default speed
 
 int main(void) {
-   int fd;
-   int wait;
-   char response[1024] = "";
+   int fd;                      // serial port file descriptor
+   int i;                       // loop counter
+   int wait;                    // serail bytes waiting
+   char response[1024] = "";    // serial response string
 
    printf("XBee DEV open: %s %dB\n", port, speed);
 
@@ -56,14 +57,27 @@ int main(void) {
 /* ------------------------------------------------------------ *
  * wait guard time, and check if 3 bytes response is received   *
  * ------------------------------------------------------------ */
-   sleep(1);              // wait another second
-   wait = checkserial(fd);
-   if(verbose == 1) printf("Debug: %s %d waiting\n", port, wait);
+   i = 0; wait = 0;
+   while((wait = checkserial(fd)) == 0) {
+      usleep(250000);     // waith another quarter second
+      if(i>12) break;     // stop waiting after 3 seconds
+      i++;
+   }
+   if(verbose == 1) printf("Debug: %s got %d bytes after %d ms\n", port, wait, i*250);
+
+/* ------------------------------------------------------------ *
+ * If there is no response, we have XBee communication failure  *
+ * Either no XBee is connected, or XBee is on different speed.  *
+ * ------------------------------------------------------------ */
+   if(wait == 0) {
+      printf("Error: No XBee responding\n");
+      return -1;
+   }
 
 /* ------------------------------------------------------------ *
  * retrieve the reply chars and save them into response string  *
  * ------------------------------------------------------------ */
-   int i = 0;
+   i = 0;
    for (i=0; i<1024; i++) {
       if(checkserial(fd)>0) response[i] = getcharserial(fd);
       else break;
@@ -88,11 +102,15 @@ int main(void) {
    if(verbose == 1) printf("Debug: %s send ATSL\\r\n", port);
 
 /* ------------------------------------------------------------ *
- * wait guard time, and check if a response is received         *
+ * Check if a response is received, wait up to 3 seconds        *
  * ------------------------------------------------------------ */
-   sleep(1);
-   wait = checkserial(fd);
-   if(verbose == 1) printf("Debug: %s %d waiting\n", port, wait);
+   i = 0;
+   while((wait = checkserial(fd)) == 0) {
+      usleep(250000);     // waith another quarter second
+      if(i>12) break;     // stop waiting after 3 seconds
+      i++;
+   }
+   if(verbose == 1) printf("Debug: %s got %d bytes after %d ms\n", port, wait, i*250);
 
 /* ------------------------------------------------------------ *
  * retrieve the reply chars and save them into response string  *
