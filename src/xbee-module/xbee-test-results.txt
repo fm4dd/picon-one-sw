@@ -1,0 +1,77 @@
+XBee open with /dev/ttySC1 115200B
+Debug: /dev/ttySC1 115200 Baud connected
+Debug: /dev/ttySC1 send +++
+Debug: /dev/ttySC1 got 3 bytes after 1100 ms
+Debug: port /dev/ttySC1 reply: OK (2 bytes)
+Debug: XBee CMD mode start complete.
+Debug: /dev/ttySC1 send ATCN\r
+Debug: /dev/ttySC1 got 3 bytes after 100 ms
+Debug: port /dev/ttySC1 reply: OK (2 bytes)
+Debug: XBee CMD mode finished.
+XBee connected /dev/ttySC1 115200B
+XBee getinfo
+Debug: /dev/ttySC1 send +++
+Debug: /dev/ttySC1 got 3 bytes after 1100 ms
+Debug: port /dev/ttySC1 reply: OK (2 bytes)
+Debug: XBee CMD mode start complete.
+Debug: send CMD ATVR
+Debug: got 5 bytes after 100 ms
+Debug: reply 100A (4 bytes)
+Debug: send CMD ATHV
+Debug: got 5 bytes after 100 ms
+Debug: reply 424C (4 bytes)
+Debug: send CMD ATNI
+Debug: got 10 bytes after 100 ms
+Debug: reply PiCon-One (9 bytes)
+Debug: send CMD ATSH
+Debug: got 7 bytes after 100 ms
+Debug: reply 13A200 (6 bytes)
+Debug: MAC 0013A200
+Debug: send CMD ATSL
+Debug: got 9 bytes after 100 ms
+Debug: reply 41B7962A (8 bytes)
+Debug: MAC 0013A20041B7962A
+Debug: send CMD AT%V
+Debug: got 4 bytes after 100 ms
+Debug: reply D0B (3 bytes)
+Debug: Convert Volt: 3.339
+Debug: /dev/ttySC1 send ATCN\r
+Debug: /dev/ttySC1 got 3 bytes after 100 ms
+Debug: port /dev/ttySC1 reply: OK (2 bytes)
+Debug: XBee CMD mode finished.
+XBee getstatus
+Debug: /dev/ttySC1 send +++
+Debug: /dev/ttySC1 got 3 bytes after 1100 ms
+Debug: port /dev/ttySC1 reply: OK (2 bytes)
+Debug: XBee CMD mode start complete.
+Debug: send CMD ATNC
+Debug: got 3 bytes after 100 ms
+Debug: reply 14 (2 bytes)
+Debug: send CMD ATAI
+Debug: got 2 bytes after 100 ms
+Debug: reply 0 (1 bytes)
+Debug: send CMD ATOP
+Debug: got 3 bytes after 100 ms
+Debug: reply 24 (2 bytes)
+Debug: send CMD ATCH
+Debug: got 2 bytes after 100 ms
+Debug: reply B (1 bytes)
+Debug: send CMD ATDB
+Debug: got 2 bytes after 100 ms
+Debug: reply 4 (1 bytes)
+Debug: send CMD ATPP
+Debug: got 2 bytes after 100 ms
+Debug: reply 8 (1 bytes)
+Debug: send CMD ATNP
+Debug: got 3 bytes after 100 ms
+Debug: reply 5C (2 bytes)
+Debug: send CMD ATMY
+Debug: got 2 bytes after 100 ms
+Debug: reply 0 (1 bytes)
+Debug: send CMD ATMP
+Debug: got 5 bytes after 100 ms
+Debug: reply FFFE (4 bytes)
+Debug: /dev/ttySC1 send ATCN\r
+Debug: /dev/ttySC1 got 3 bytes after 100 ms
+Debug: port /dev/ttySC1 reply: OK (2 bytes)
+Debug: XBee CMD mode finished.
