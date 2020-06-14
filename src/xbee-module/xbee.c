@@ -26,13 +26,14 @@ XBee_Info info;            // XBee device information
 XBee_Status status;        // XBee device status
 
 // Coordinator configuration (PiCon One default)
-const char *coord_conf[7] = {
+const char *coord_conf[8] = {
    "ATID24\r",           // PAN ID = 24
    "ATCE1\r",            // Enable Coordinator role
    "ATJV0\r",            // Dont try to join NW
    "ATDH0\r",            // Dest addr high & low = 0/FFFF
    "ATDLFFFF\r",         // Broadcast to all clients
    "ATNISPiCon-One\r",   // Device name
+   "ATC810\r",           // Set S2C compatibility (only for XBee3)
    "ATAP0\r" };          // Set transparent mode
 // End Coordinator configuration
 
@@ -118,6 +119,7 @@ int xbee_getinfo(int fd) {
    // assign response to MAC string, e.g. 0013A200417D5111
    char mac[17];
    uint8_t leadzeros = 8 - strlen(response);
+   mac[leadzeros] = '\0';
    while(leadzeros > 0) {
      leadzeros--;
      mac[leadzeros] = '0';
@@ -130,9 +132,10 @@ int xbee_getinfo(int fd) {
    if(ret == -1) return -1; // exit with failure code
    // add response to MAC string e.g. 0013A200417D5111
    leadzeros = 8 - strlen(response);
+   mac[8+leadzeros] = '\0';
    while(leadzeros > 0) {
      leadzeros--;
-     mac[leadzeros] = '0';
+     mac[8+leadzeros] = '0';
    }
    strcat(mac, response);
    strncpy(info.mac, mac, sizeof(info.mac));
@@ -523,4 +526,45 @@ int xbee_sendcmd(int fd, const char *cmd, char *response) {
    if(response[i] == '\r') response[i] = '\0'; // eliminate '\r'
    if(verbose == 1) printf("Debug: reply %s (%d bytes)\n", response, i);
    return 0;       // exit with success
-}
+} // end xbee_sendcmd()
+
+/* ---------------------------------------------------- *
+ * factoryreset() resets the config to factory defaults *
+ * returns 0 for success, -1 for errors.                *
+ * ---------------------------------------------------- */
+int xbee_factoryreset(int fd) {
+   char response[512];
+   int ret;
+
+   /* ------------------------------------------------- *
+    * Enter CMD mode                                    *
+    * ------------------------------------------------- */
+   if(xbee_startcmdmode(fd, timeout) == -1) return -1;
+
+   /* ------------------------------------------------- *
+    * Restore factory defaults with ATRE                *
+    * ------------------------------------------------- */
+   ret = xbee_sendcmd(fd, "ATRE\r", response);
+   if(ret == -1) return -1; // exit with failure code
+   /* ------------------------------------------------- *
+    * Confirm response string == "OK"                   *
+    * ------------------------------------------------- */
+   if(strcmp(response, "OK") != 0) return -1;
+
+   /* ------------------------------------------------- *
+    * Write settings to module with ATWR                *
+    * ------------------------------------------------- */
+   ret = xbee_sendcmd(fd, "ATWR\r", response);
+   if(ret == -1) return -1; // exit with failure code
+   /* ------------------------------------------------- *
+    * Confirm response string == "OK"                   *
+    * ------------------------------------------------- */
+   if(strcmp(response, "OK") != 0) return -1;
+
+   /* ------------------------------------------------- *
+    * Finished, end command mode                        *
+    * ------------------------------------------------- */
+   if(xbee_endcmdmode(fd, timeout) == -1)   return -1;
+   return 0;                               // return success
+} // end getstatus()
+

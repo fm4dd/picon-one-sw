@@ -33,6 +33,23 @@ typedef struct {
 
 XBee_Info nw_status[16]; 
 
+enum xbee_io_type {
+   XBEE_IO_TYPE_DISABLED            = 0, // Disabled
+   XBEE_IO_TYPE_SPECIAL             = 1, // Special function e.g. assoc on DIO5
+   XBEE_IO_TYPE_ANALOG_INPUT        = 2, // Analog input
+   XBEE_IO_TYPE_DIGITAL_INPUT       = 3, // Digital input
+   XBEE_IO_TYPE_DIGITAL_OUTPUT_LOW  = 4, // Digital output low
+   XBEE_IO_TYPE_DIGITAL_OUTPUT_HIGH = 5, // Digital output high
+   XBEE_IO_TYPE_TXEN_ACTIVE_LOW     = 6, // RS485 transmit enable (act low)
+   XBEE_IO_TYPE_TXEN_ACTIVE_HIGH    = 7, // RS485 transmit enable (act high)
+   XBEE_IO_TYPE_MASK             = 0x0F, // Mask for above settings
+   XBEE_IO_TYPE_CHANGE_DETECT    = 0x10, // auto-sampling when edge detected (ATIC command)
+   XBEE_IO_TYPE_PULLUP           = 0x20, // pull-up resistor active (ATPR command)
+   XBEE_IO_TYPE_PULLDOWN         = 0x40, // pull-down resistor active (future hardware)
+   XBEE_IO_FORCE                 = 0x80, // force transmit to device (vs only if changed)
+   XBEE_IO_TYPE_DIGITAL_INPUT_PULLUP = XBEE_IO_TYPE_DIGITAL_INPUT | XBEE_IO_TYPE_PULLUP,
+};
+
 struct XBee_Config {}; // TBD
 
 int xbee_enable(char *, int);
@@ -45,3 +62,4 @@ int xbee_recvstring(int, char *);
 int xbee_startcmdmode(int, int);
 int xbee_endcmdmode(int, int);
 int xbee_sendcmd(int, const char *, char *);
+int xbee_factoryreset(int);
