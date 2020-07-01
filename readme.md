@@ -136,6 +136,18 @@ pi@rpi0w:~/picon-one-sw/src/uart-sc16is752 $ ./uart-send
 WXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}
 ```
 
+### XBee RF module
+
+```
+pi@rpi0w:~/picon-one-sw/src/xbee-module $ ./xbee-term /dev/ttySC1
+Simple XBee Terminal
+CTRL-X to EXIT, CTRL-K toggles break, CTRL-R toggles RTS, TAB changes bps.
+[115200 bps][set RTS][CTS cleared]
++++OK
+ATSL
+41B7962A
+```
+
 ## License
 
 MIT License
