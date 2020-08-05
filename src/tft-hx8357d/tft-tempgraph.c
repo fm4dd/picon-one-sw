@@ -14,31 +14,22 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <stdbool.h>
 #include <VG/openvg.h>
 #include <VG/vgu.h>
 #include "fontinfo.h"
+#include <wiringPi.h>
 #include "shapes.h"
+#include "ip.h"
+#include "tft-shared.h"
 
 /* ------------------------------------------------------------ *
  * coordpoint() marks a coordinate, preserving a previous color *
  * ------------------------------------------------------------ */
 void coordpoint(VGfloat x, VGfloat y, VGfloat size, VGfloat pcolor[4]) {
-        Fill(255, 255, 255, 1);
-        Circle(x, y, size);
-        setfill(pcolor);
-}
-
-/* ------------------------------------------------------------ *
- * hexToRGB() converts a Arduino-style hex color to RGB values  *
- * ------------------------------------------------------------ */
-void hexToRGB(uint16_t hexValue, uint8_t *r, uint8_t *g, uint8_t *b) {
-   *r = (hexValue & 0xF800) >> 11;
-   *g = (hexValue & 0x07E0) >> 5;
-   *b = hexValue & 0x001F;
-
-   *r = (*r * 255) / 31;
-   *g = (*g * 255) / 63;
-   *b = (*b * 255) / 31;
+   Fill(255, 255, 255, 1);
+   Circle(x, y, size);
+   setfill(pcolor);
 }
 
 /* ------------------------------------------------------------ *
@@ -46,34 +37,40 @@ void hexToRGB(uint16_t hexValue, uint8_t *r, uint8_t *g, uint8_t *b) {
  * ------------------------------------------------------------ */
 int tempToChart(float temp) {
    int chartpt = 50;  // Y-axis zero value
-   if(temp <= 30.0)
-      return chartpt;
-   if(temp > 60.0)
-      return 200;
-   if(temp > 30.0) 
-      chartpt = (int) round(50.0 + ((temp - 30.0) * 5));
+   if(temp <= 30.0) return chartpt;
+   if(temp > 60.0) return 200;
+   if(temp > 30.0) chartpt = (int) round(50.0 + ((temp - 30.0) * 5));
    return chartpt;
 }
 
 int main() {
    int width, height;
    FILE *file;
+   char addr[16];
+   char mask[16];
    float systemp, millideg, sysfreq;
-   uint8_t r; 
-   uint8_t g;
-   uint8_t b;
-
-   static char time_str[9];
-   static char date_str[9];
    static char temp_str[50];
-   time_t now;
-   struct tm *now_tm;
    struct timespec sleep;
    int xcount = 0;
 
+   /* --------------------------------------------------------- *
+    * Setup GPIO pins for button control                        *
+    * --------------------------------------------------------- */
+   wiringPiSetup ();
+   pinMode (SW1_UP,    INPUT);  // SW1 Up
+   pinMode (SW2_MODE,  INPUT);  // SW2 Mode
+   pinMode (SW3_DOWN,  INPUT);  // SW3 Down
+   pinMode (SW4_ENTER, INPUT);  // SW4 Enter
+
+   /* --------------------------------------------------------- *
+    * Setup display control. Get IP and Netmask.                *
+    * --------------------------------------------------------- */
+   getip("wlan0", addr);                   // get wlan0 IP address
+   getmask("wlan0", mask);                 // get wlan0 netmask
    VGfloat shapecolor[4];
    RGB(255, 125, 125, shapecolor);
    int chartset[440] = { 0 };
+   Start(width, height);                   // start the picture
 
    /* --------------------------------------------------------- *
     * Setup sleep time and display control                      *
@@ -83,35 +80,17 @@ int main() {
    init(&width, &height);                  // Graphics init
 
    while(1) {
+      /* ----------------------------------------------------- *
+       * Check button press DOWN for program exit              *
+       * ----------------------------------------------------- */
+      if(digitalRead(SW3_DOWN) == LOW) {
+         exit(0);
+      }
      /* ------------------------------------------------------ *
       * TFT display output, upper header 70px from 251..319    *
       * ------------------------------------------------------ */
-      Start(width, height);                     // start the picture
       Background(0, 0, 0);                      // set background black
-      StrokeWidth(1);                           // set line size
-      Stroke(0, 255, 0, 1);                     // set line color green
-      Line(0, 250, 479, 250);                   // draw a separator line
-      Image(20, 253, 64, 64, "./images/rpi-logo64.jpg"); // load RPI logo
-
-     /* --------------------------------------------------------- *
-      * get system time and write it into the string variables    *
-      * --------------------------------------------------------- */
-      now = time(0); // Get the system time
-      now_tm = localtime(&now);
-      strftime(date_str, sizeof(date_str), "%y-%m-%d",now_tm);
-
-      hexToRGB(0x3536, &r, &g, &b);             // use the Arduino 16bit values
-      Fill(r, g, b, 1);                         // set foreground blue-ish
-      Text(130, 297, "Raspberry", NotoMonoTypeface, 19);
-      Text(130, 273, "Pi Zero-W", NotoMonoTypeface, 19);
-      Text(320, 290, date_str, MonoTypeface, 22);
-
-      strftime(time_str, sizeof(time_str), "%H:%M:%S",now_tm);
-
-      hexToRGB(0xfce0, &r, &g, &b);             // use Arduino 16bit values
-      Fill(r, g, b, 1);                         // set foreground amber
-      Text(130, 256, "PiCon One v1.0", NotoMonoTypeface, 12);
-      Text(320, 260, time_str, MonoTypeface, 22);
+      tftheader();
 
       Stroke(0, 255, 0, 1);                     // set line color green
 
@@ -185,6 +164,7 @@ int main() {
          memset(chartset, 0, sizeof(chartset)); // clear all values
       }
 
+      tftbottom(addr, mask);
       End();                                    // End the picture
       nanosleep(&sleep, NULL);                  // sleep 0.5 seconds
    }

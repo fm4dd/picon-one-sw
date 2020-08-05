@@ -21,70 +21,7 @@
 #include "fontinfo.h"
 #include "shapes.h"
 #include "ip.h"
-
-/* ------------------------------------------------------------ *
- * hexToRGB() converts a Arduino-style hex color to RGB values  *
- * ------------------------------------------------------------ */
-void hexToRGB(uint16_t hexValue, uint8_t *r, uint8_t *g, uint8_t *b) {
-   *r = (hexValue & 0xF800) >> 11;
-   *g = (hexValue & 0x07E0) >> 5;
-   *b = hexValue & 0x001F;
-
-   *r = (*r * 255) / 31;
-   *g = (*g * 255) / 63;
-   *b = (*b * 255) / 31;
-}
-
-/* ------------------------------------------------------ *
- * tftheader: outputs upper TFT header 70px from 251..319 *
- * ------------------------------------------------------ */
-void tftheader(){
-   static char time_str[9];
-   static char date_str[9];
-   time_t now;
-   struct tm *now_tm;
-   uint8_t r; 
-   uint8_t g;
-   uint8_t b;
-
-   StrokeWidth(1);                         // set line size
-   Stroke(0, 255, 0, 1);                   // set line color green
-   Line(0, 250, 479, 250);                 // draw a separator line
-   Image(20, 253, 64, 64, "./images/rpi-logo64.jpg"); // load RPI logo
-
-  /* --------------------------------------------------------- *
-   * get system time and write it into the string variables    *
-   * --------------------------------------------------------- */
-   now = time(0); // Get the system time
-   now_tm = localtime(&now);
-   strftime(date_str, sizeof(date_str), "%y-%m-%d",now_tm);
-
-   hexToRGB(0x3536, &r, &g, &b);           // use the Arduino 16bit values
-   Fill(r, g, b, 1);                       // set foreground blue-ish
-   Text(130, 297, "Raspberry", NotoMonoTypeface, 19);
-   Text(130, 273, "Pi Zero-W", NotoMonoTypeface, 19);
-   Text(320, 290, date_str, MonoTypeface, 22);
-
-   strftime(time_str, sizeof(time_str), "%H:%M:%S",now_tm);
-
-   hexToRGB(0xfce0, &r, &g, &b);           // use Arduino 16bit values
-   Fill(r, g, b, 1);                       // set foreground amber
-   Text(130, 256, "PiCon One v1.0", NotoMonoTypeface, 12);
-   Text(320, 260, time_str, MonoTypeface, 22);
-}
-
-/* --------------------------------------------------------- *
- * tftbottom: draw white bottom info bar with WLAN0 IP/Mask  *
- * --------------------------------------------------------- */
-void tftbottom(const char *addr, const char *mask){
-   Fill(255, 255, 255, 1);                 // set foreground White
-   StrokeWidth(0);                         // Set Line size
-   Rect(0, 0, 480, 20);                    // from 0.0 size 480x20
-   Fill(0, 0, 0, 1);                       // set text color black
-   char info_str[50];
-   snprintf(info_str, sizeof(info_str), "WLAN0 IP: %s Mask %s", addr, mask);
-   Text(2, 2, info_str, MonoTypeface, 13);
-}
+#include "tft-shared.h"
 
 int main() {
    int width, height;
@@ -93,6 +30,7 @@ int main() {
    struct tm *time;                        // standard time struct
    struct timespec tp1, tp2, tp3, tp4;     // nanosec time structs
    long ms;                                // milliseconds
+   uint8_t swstate = 0;                    // button press state
 
    VGfloat shapecolor[4];
    RGB(255, 125, 125, shapecolor);
@@ -105,12 +43,12 @@ int main() {
     * Setup GPIO pins for button control                        *
     * --------------------------------------------------------- */
    wiringPiSetup ();
-   pinMode (21, INPUT);  // SW1 Up
-   pinMode (22, INPUT);  // SW2 Mode
-   pinMode (23, INPUT);  // SW3 Down
-   pinMode (24, INPUT);  // SW4 Enter
+   pinMode (SW1_UP,    INPUT);  // SW1 Up
+   pinMode (SW2_MODE,  INPUT);  // SW2 Mode
+   pinMode (SW3_DOWN,  INPUT);  // SW3 Down
+   pinMode (SW4_ENTER, INPUT);  // SW4 Enter
    bool runstate = FALSE;
-   char statestr[6] = "Stop";
+   char statestr[12] = "Stop";
    char timestr[22] = "00:00:00.000";
 
    /* --------------------------------------------------------- *
@@ -125,30 +63,40 @@ int main() {
       Background(0, 0, 0);                 // set background black
       tftheader();
 
+      if(swstate>0) swstate = 0;
+      swstate = sw_detect();
+
       /* ----------------------------------------------------- *
        * Check button press MODE for start action              *
        * ----------------------------------------------------- */
-      if((digitalRead(22) == LOW) && (runstate == FALSE)) {
-         runstate = TRUE;
-         clock_gettime(CLOCK_MONOTONIC_RAW, &tp1);
-         snprintf(statestr, sizeof(statestr), "Start");
+      if((detect_mode == TRUE) && (runstate == FALSE)) {
+            snprintf(statestr, sizeof(statestr), "Start");
+            runstate = TRUE; detect_mode = FALSE;
+            clock_gettime(CLOCK_MONOTONIC_RAW, &tp1);
       }
       /* ----------------------------------------------------- *
        * Check button press ENTER for stop action              *
        * ----------------------------------------------------- */
-      if((digitalRead(24) == LOW) && (runstate == TRUE)) {
-         runstate = FALSE;
+      if((detect_enter == TRUE) && (runstate == TRUE)) {
          snprintf(statestr, sizeof(statestr), "Stop");
+         runstate = FALSE; detect_enter = FALSE;
          tp4.tv_sec = tp3.tv_sec;
          tp4.tv_nsec = tp3.tv_nsec;
       }
       /* ----------------------------------------------------- *
        * Check button press UP for clear action                *
        * ----------------------------------------------------- */
-      if((digitalRead(21) == LOW) && (runstate == FALSE)) {
+      if((detect_up == TRUE) && (runstate == FALSE)) {
          snprintf(timestr, sizeof(timestr), "00:00:00.000");
-         tp4.tv_sec = 0;
-         tp4.tv_nsec = 0;
+         tp3.tv_sec = 0;  tp4.tv_sec = 0;
+         tp3.tv_nsec = 0;  tp4.tv_nsec = 0;
+         detect_up = FALSE;
+      }
+      /* ----------------------------------------------------- *
+       * Check button press DOWN for program exit              *
+       * ----------------------------------------------------- */
+      if((detect_down == TRUE) && (runstate == FALSE)) {
+         exit(0);
       }
       /* ----------------------------------------------------- *
        * In runstate, check and display the elapsing time      *
@@ -173,20 +121,17 @@ int main() {
          if (ms > 999) { tsnow++; ms = 0; }
          snprintf(timestr, sizeof(timestr), "%02d:%02d:%02d.%03ld",
                time->tm_hour, time->tm_min, time->tm_sec, ms);
-
-         // debug output:
-         // printf("tp2 %lu tp1 %lu tp3 %lu ms %lu\n",
-         //         tp2.tv_nsec, tp1.tv_nsec, tp3.tv_nsec, ms);
       }
 
       /* ----------------------------------------------------- *
        * Stopwatch TFT output, showing the elapsing time       *
        * ----------------------------------------------------- */
-      Text(20, 160, "StopWatch:", MonoTypeface, 22);
-      Text(200, 160, statestr, MonoTypeface, 22);
+      Text(110, 180, "StopWatch:", MonoTypeface, 22);
+      Text(290, 180, statestr, MonoTypeface, 22);
       Fill(255, 255, 255, 1);              // set foreground white
-      Text(20, 120, timestr, MonoTypeface, 22);
+      Text(130, 140, timestr, MonoTypeface, 22);
 
+      tftaction(swstate);
       tftbottom(addr, mask);
       End();                               // End the picture
    }

@@ -31,7 +31,7 @@ int main(void) {
 
   char outstr[255];
   for(int i=0; i<10; i++) {
-     snprintf(outstr, sizeof(outstr), "Hello World %d\r", i);
+     snprintf(outstr, sizeof(outstr), "0123456789 Hello World %d\r", i);
      printf("%s\n", outstr);
      fflush(stdout);
      strserial(fd, outstr);
@@ -39,6 +39,7 @@ int main(void) {
   }
 
   printf("\n");
+  flushserial(fd);
   closeserial(fd);
   return 0;
 }
